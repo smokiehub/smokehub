@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smoke Hub - Catálogo e Pedidos</title>
+    <style>
+        :root {
+            --cor-principal: #fde047; /* Amarelo */
+            --cor-secundaria: #a855f7; /* Roxo */
+            --cor-fundo: #18181b;
+            --cor-card: #27272a;
+            --cor-texto: #f4f4f5;
+            --cor-botao-texto: #18181b;
+            --cor-sucesso: #4ade80;
+            --cor-perigo: #f87171;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto); }
+        
+        .aviso-topo {
+            background-color: var(--cor-principal);
+            color: var(--cor-botao-texto);
+            text-align: center;
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        header { text-align: center; padding: 40px 20px; background-color: var(--cor-card); }
+        header h1 { font-size: 2.5rem; }
+        header .logo-smoke { color: var(--cor-principal); }
+        header .logo-hub { color: var(--cor-secundaria); }
+        header p { margin-top: 10px; }
+        header .delivery-info { background-color: var(--cor-principal); color: var(--cor-botao-texto); padding: 8px; border-radius: 8px; font-weight: 600; display: inline-block; margin-top: 20px; }
+        main { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .categoria-titulo { font-size: 2rem; color: var(--cor-principal); margin-top: 40px; margin-bottom: 20px; border-bottom: 2px solid var(--cor-secundaria); padding-bottom: 10px; }
+        .grid-produtos { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .card-produto { background-color: var(--cor-card); border-radius: 12px; overflow: hidden; text-align: center; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #3f3f46; }
+        .info-produto { cursor: pointer; }
+        .card-produto img { max-width: 100%; height: 200px; object-fit: contain; margin-bottom: 15px; border-radius: 8px;}
+        .card-produto h3 { font-size: 1.2rem; margin-bottom: 10px; flex-grow: 1; }
+        .card-produto .preco { font-size: 1.5rem; font-weight: 700; color: var(--cor-principal); margin-bottom: 20px; }
+        .btn-add-carrinho { display: inline-block; background-color: var(--cor-principal); color: var(--cor-botao-texto); padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; cursor: pointer; border: none; font-family: 'Poppins', sans-serif; font-size: 1rem; transition: transform 0.2s ease, background-color 0.2s ease; }
+        .btn-add-carrinho:hover { transform: scale(1.05); background-color: #facc15; }
+        footer { text-align: center; padding: 40px 20px; margin-top: 40px; background-color: var(--cor-card); }
+        footer a { color: var(--cor-principal); text-decoration: none; font-weight: 600; }
+        
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal.ativo { display: flex; }
+        .modal-conteudo { background-color: var(--cor-card); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-fechar { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+        .modal-conteudo h2 { margin-bottom: 20px; color: var(--cor-principal); }
+        
+        #detalhes-imagem { width: 100%; max-height: 250px; object-fit: contain; margin-bottom: 15px; border-radius: 8px; }
+        #detalhes-preco { font-size: 1.5rem; font-weight: 700; color: var(--cor-principal); margin: 10px 0; }
+        #detalhes-descricao { margin-top: 15px; line-height: 1.6; }
+
+        .carrinho-flutuante { position: fixed; bottom: 20px; right: 20px; background-color: var(--cor-secundaria); color: white; width: 70px; height: 70px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 1000; }
+        .carrinho-flutuante .contador { position: absolute; top: 0; right: 0; background-color: var(--cor-principal); color: var(--cor-botao-texto); width: 25px; height: 25px; border-radius: 50%; font-size: 0.9rem; font-weight: 700; display: flex; justify-content; align-items: center; }
+        #lista-carrinho { list-style: none; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
+        #lista-carrinho li { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; }
+        .item-controles button { background-color: var(--cor-principal); color: var(--cor-botao-texto); border: none; width: 25px; height: 25px; border-radius: 50%; font-weight: 700; cursor: pointer; margin-left: 5px; }
+        .item-controles .btn-remover-tudo { background-color: var(--cor-perigo); }
+        .total-carrinho { font-weight: 700; font-size: 1.2rem; text-align: right; margin-bottom: 20px; }
+        .form-grupo { margin-bottom: 15px; }
+        .form-grupo label { display: block; margin-bottom: 5px; }
+        .form-grupo input[type="text"], .form-grupo input[type="tel"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #3f3f46; background-color: var(--cor-fundo); color: var(--cor-texto); font-size: 1rem; }
+        .opcoes-pagamento label { margin-right: 15px; }
+        .opcoes-pagamento input { margin-right: 5px; }
+        .btn-finalizar { width: 100%; padding: 15px; background-color: var(--cor-sucesso); color: var(--cor-botao-texto); border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; margin-top: 10px; }
+
+        @media (min-width: 768px) { .grid-produtos { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .grid-produtos { grid-template-columns: repeat(3, 1fr); } }
+    </style>
+</head>
+<body>
+
+    <div class="aviso-topo">
+        Este é nosso catálogo online. Monte seu pedido e finalize no carrinho!
+    </div>
+
+    <header>
+        <h1><span class="logo-smoke">Smoke</span><span class="logo-hub">Hub</span></h1>
+        <p>Seu ponto de encontro head shop.</p>
+        <div class="delivery-info">
+            🛵 Entregas em Currais Novos e Tangará
+        </div>
+    </header>
+
+    <main id="catalogo">
+        </main>
+
+    <footer>
+        <p><strong>Smoke Hub © 2025</strong></p>
+        <p>Entregas em Currais Novos e Tangará - RN</p>
+        <p>Siga-nos no Instagram: <a href="https://www.instagram.com/smokehub.oficial" target="_blank">@smokehub.oficial</a></p>
+    </footer>
+
+    <div class="carrinho-flutuante" onclick="toggleCheckoutModal()">
+        🛒
+        <span class="contador" id="contador-carrinho">0</span>
+    </div>
+    
+    <div id="modal-detalhes" class="modal">
+        <div class="modal-conteudo">
+            <button class="modal-fechar" onclick="fecharDetalhes()">×</button>
+            <img id="detalhes-imagem" src="" alt="Imagem do Produto">
+            <h2 id="detalhes-nome">Nome do Produto</h2>
+            <p id="detalhes-preco">R$ 0,00</p>
+            <p id="detalhes-descricao">Descrição do produto aqui...</p>
+        </div>
+    </div>
+
+    <div id="modal-checkout" class="modal">
+        <div class="modal-conteudo">
+            <button class="modal-fechar" onclick="toggleCheckoutModal()">×</button>
+            <h2>Finalizar Pedido</h2>
+            <ul id="lista-carrinho"></ul>
+            <p class="total-carrinho" id="total-carrinho">Total: R$ 0,00</p>
+            <form id="form-checkout" action="https://formspree.io/f/xwprebgr" method="POST">
+                <div class="form-grupo">
+                    <label for="nome">Seu Nome</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+                <div class="form-grupo">
+                    <label for="whatsapp">Seu WhatsApp (com DDD)</label>
+                    <input type="tel" id="whatsapp" name="whatsapp" placeholder="Ex: 84 91234-5678" required>
+                </div>
+                <div class="form-grupo">
+                    <label for="endereco">Endereço de Entrega (Rua, Nº, Bairro)</label>
+                    <input type="text" id="endereco" name="endereco" required>
+                </div>
+                <div class="form-grupo">
+                    <label>Forma de Pagamento</label>
+                    <div class="opcoes-pagamento">
+                        <input type="radio" id="dinheiro" name="pagamento" value="Dinheiro" checked required>
+                        <label for="dinheiro">Dinheiro</label>
+                        <input type="radio" id="pix" name="pagamento" value="PIX">
+                        <label for="pix">PIX</label>
+                    </div>
+                </div>
+                <input type="hidden" name="pedido_completo" id="pedido_completo">
+                <button type="submit" class="btn-finalizar">Confirmar Pedido</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const produtos = [
+            // Sedas
+            { nome: "Seda Bem Bolado Pop 1 1/4 Slim", preco: 5.50, categoria: "Sedas", descricao: "Goma natural. Livreto com 50 folhas.", imagem: "SedaBemBoladoPop114Slim.png" },
+            { nome: "Seda Bem Bolado Pop 1 1/4 Large", preco: 5.50, categoria: "Sedas", descricao: "Goma natural. Livreto com 50 folhas.", imagem: "SedaBemBoladoPop114Large.png" },
+            { nome: "Seda Bem Bolado Pop King Size Slim", preco: 6.00, categoria: "Sedas", descricao: "Goma natural. Livreto com 35 folhas.", imagem: "SedaBemBoladoPopKingSizeSlim.png" },
+            { nome: "Seda Bem Bolado Pop King Size Large", preco: 6.00, categoria: "Sedas", descricao: "Goma natural. Livreto com 35 folhas.", imagem: "SedaBemBoladoPopKingSizeLarge.png" },
+            { nome: "Seda Bem Bolado Brown 1 1/4 Large", preco: 5.50, categoria: "Sedas", descricao: "Papel natural, sem cloro. Ultra fino. Livreto com 50 folhas", imagem: "SedaBemBoladoBrown114Large.png" },
+            { nome: "Seda Bem Bolado Brown King Size Slim", preco: 6.00, categoria: "Sedas", descricao: "Papel natural, sem cloro. Ultra fino. Livreto com 35 folhas", imagem: "SedaBemBoladoBrownKingSizeSlim.png" },
+            { nome: "Seda Bem Bolado Brown King Size Large", preco: 6.00, categoria: "Sedas", descricao: "Papel natural, sem cloro. Ultra fino. Livreto com 35 folhas", imagem: "SedaBemBoladoBrownKingSizeLarge.png" },
+            { nome: "Seda Bem Bolado Hemp King Size Large", preco: 6.50, categoria: "Sedas", descricao: "Papel 100% hemp. Natural, sem cloro. Livreto com 50 folhas.", imagem: "SedaBemBoladoHempKingSizeLarge.png" },
+            { nome: "Seda Bem Bolado Hemp 1 1/4 Large", preco: 6.00, categoria: "Sedas", descricao: "Papel 100% hemp. Natural, sem cloro. Livreto com 50 folhas.", imagem: "SedaBemBoladoHemp114Large.png" },
+            { nome: "Seda Bem Bolado Celulose 1 1/4 Slim", preco: 6.00, categoria: "Sedas", descricao: "100% biodegradável. Combustão lenta. Dispensa cola. Livreto com 50 folhas. ", imagem: "SedaBemBoladoCelulose114Slim.png" },
+            { nome: "Seda Bem Bolado Celulose King Size Slim", preco: 6.50, categoria: "Sedas", descricao: "100% biodegradável. Combustão lenta. Dispensa cola. Livreto com 50 folhas.", imagem: "SedaBemBoladoCeluloseKingSizeSlim.png" },
+            { nome: "Seda Bem Bolado Brown King Size Roll", preco: 13.00, categoria: "Sedas", descricao: "Papel natural, sem cloro. Ultra fino. Tamanho 5 metros!", imagem: "SedaBemBoladoBrownKingSizeRoll.png" },
+            // Piteiras
+            { nome: "Piteira Bem Bolado Pop Slim", preco: 5.00, categoria: "Piteiras", descricao: "Papel branco. Perfuração que facilita a dobra e não permite que o tabaco saia na boca. Livreto com 32 folhas.", imagem: "PiteiraBemBoladoPopSlim.png" },
+            { nome: "Piteira Bem Bolado Pop Large", preco: 5.00, categoria: "Piteiras", descricao: "Papel branco. Perfuração que facilita a dobra e não permite que o tabaco saia na boca. Livreto com 32 folhas.", imagem: "PiteiraBemBoladoPopLarge.png" },
+            { nome: "Piteira Bem Bolado Brown Large", preco: 5.00, categoria: "Piteiras", descricao: "Papel Kraft. Perfuração que facilita a dobra e não permite que o tabaco saia na boca. Livreto com 32 folhas.", imagem: "PiteiraBemBoladoBrownLarge.png" },
+            { nome: "Piteira Bem Bolado Pop Extra Large", preco: 6.00, categoria: "Piteiras", descricao: "Papel branco. Perfuração que facilita a dobra e não permite que o tabaco saia na boca. Livreto com 32 folhas.", imagem: "PiteiraBemBoladoPopExtraLarge.png" },
+            { nome: "Piteira Girls in Green Rosa", preco: 8.00, categoria: "Piteiras", descricao: "Papel vergê especial. Perfuração que facilita a dobra e não permite que o tabaco saia na boca. Livreto com 50 folhas.", imagem: "PiteiraGirlsinGreenRosa.png" },
+            { nome: "Piteira Girls in Green Verde", preco: 8.00, categoria: "Piteiras", descricao: "Papel reciclado especial. Perfuração que facilita a dobra e não permite que o tabaco saia na boca. Livreto com 50 folhas.", imagem: "PiteiraGirlsinGreenVerde.png" },
+            // Filtros
+            { nome: "Filtro Bem Bolado Clássico und.", preco: 0.25, categoria: "Filtros", descricao: "Filtro de acetato. Biodegradável.", imagem: "FiltroBemBoladoClássico.png" },
+            { nome: "Filtro Bem Bolado Clássico Longo und.", preco: 0.25, categoria: "Filtros", descricao: "Filtro de acetato. Biodegradável.", imagem: "FiltroBemBoladoClássicoLongo.png" },
+            { nome: "Filtro Jilter Premium und.", preco: 0.75, categoria: "Filtros", descricao: "Reduz a nicotina e o alcatrão. Não filtra sua brisa. com encaixe para piteira.", imagem: "FiltroJilterPremium.png" },
+            // Dichavadores
+            { nome: "Dichavador Bem Bolado 4cm", preco: 15.00, categoria: "Dichavadores", descricao: "Feito em policarbonato. Imã central. Contém 3 partes. 4cm de diâmentro.", imagem: "DichavadorBemBolado4cm.png" },
+            { nome: "Dichavador Bem Bolado 6cm", preco: 20.00, categoria: "Dichavadores", descricao: "Feito em policarbonato. Imã central. Contém 3 partes. 6cm de diâmentro.", imagem: "DichavadorBemBolado6cm.png" },
+            // Isqueiros
+            { nome: "Isqueiro GTI Master Sólido", preco: 4.00, categoria: "Isqueiros", descricao: "Isqueiro com controlador de chamas. certificado Inmetro", imagem: "IsqueiroGTIMasterSólido.png" }
+        ];
+
+        const catalogo = document.getElementById('catalogo');
+        const contadorCarrinho = document.getElementById('contador-carrinho');
+        const listaCarrinho = document.getElementById('lista-carrinho');
+        const totalCarrinho = document.getElementById('total-carrinho');
+        const formCheckout = document.getElementById('form-checkout');
+        const campoPedidoCompleto = document.getElementById('pedido_completo');
+        const modalCheckout = document.getElementById('modal-checkout');
+        const modalDetalhes = document.getElementById('modal-detalhes');
+        let carrinho = [];
+
+        function renderizarProdutos() {
+            const categorias = [...new Set(produtos.map(p => p.categoria))];
+            categorias.forEach(categoria => {
+                const secao = document.createElement('section');
+                secao.id = categoria.toLowerCase().replace(/ /g, '-');
+                const titulo = document.createElement('h2');
+                titulo.className = 'categoria-titulo';
+                titulo.innerText = categoria;
+                secao.appendChild(titulo);
+                const grid = document.createElement('div');
+                grid.className = 'grid-produtos';
+                produtos.filter(p => p.categoria === categoria).forEach(produto => {
+                    const card = document.createElement('div');
+                    card.className = 'card-produto';
+                    card.innerHTML = `
+                        <div class="info-produto" onclick="abrirDetalhes('${produto.nome}')">
+                            <img src="${produto.imagem}" alt="${produto.nome}">
+                            <h3>${produto.nome}</h3>
+                        </div>
+                        <div>
+                            <p class="preco">R$ ${produto.preco.toFixed(2).replace('.', ',')}</p>
+                            <button class="btn-add-carrinho" onclick="adicionarAoCarrinho('${produto.nome}', ${produto.preco})">Adicionar ao Carrinho</button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+                secao.appendChild(grid);
+                catalogo.appendChild(secao);
+            });
+        }
+
+        function adicionarAoCarrinho(nome, preco) {
+            const itemExistente = carrinho.find(item => item.nome === nome);
+            if (itemExistente) {
+                itemExistente.quantidade++;
+            } else {
+                carrinho.push({ nome, preco, quantidade: 1 });
+            }
+            atualizarCarrinho();
+        }
+
+        function removerDoCarrinho(nome) {
+            const itemExistente = carrinho.find(item => item.nome === nome);
+            if (itemExistente) {
+                itemExistente.quantidade--;
+                if (itemExistente.quantidade === 0) {
+                    carrinho = carrinho.filter(item => item.nome !== nome);
+                }
+            }
+            atualizarCarrinho();
+        }
+        
+        function removerTudoDoCarrinho(nome) {
+             carrinho = carrinho.filter(item => item.nome !== nome);
+             atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            contadorCarrinho.innerText = carrinho.reduce((total, item) => total + item.quantidade, 0);
+            listaCarrinho.innerHTML = '';
+            let total = 0;
+            if (carrinho.length === 0) {
+                listaCarrinho.innerHTML = '<li>Seu carrinho está vazio.</li>';
+            } else {
+                carrinho.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${item.quantidade}x ${item.nome}</span>
+                        <div class="item-controles">
+                            <button onclick="removerDoCarrinho('${item.nome}')">-</button>
+                            <button onclick="adicionarAoCarrinho('${item.nome}', ${item.preco})">+</button>
+                            <button class="btn-remover-tudo" onclick="removerTudoDoCarrinho('${item.nome}')">×</button>
+                        </div>
+                    `;
+                    listaCarrinho.appendChild(li);
+                    total += item.preco * item.quantidade;
+                });
+            }
+            totalCarrinho.innerText = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
+            if (carrinho.length === 0 && modalCheckout.classList.contains('ativo')) {
+                toggleCheckoutModal();
+            }
+        }
+
+        function toggleCheckoutModal() {
+            if (carrinho.length > 0 || modalCheckout.classList.contains('ativo')) {
+                 modalCheckout.classList.toggle('ativo');
+            } else {
+                alert("Seu carrinho está vazio!");
+            }
+            atualizarCarrinho();
+        }
+
+        function abrirDetalhes(nome) {
+            const produto = produtos.find(p => p.nome === nome);
+            if (produto) {
+                document.getElementById('detalhes-imagem').src = produto.imagem;
+                document.getElementById('detalhes-nome').innerText = produto.nome;
+                document.getElementById('detalhes-preco').innerText = `R$ ${produto.preco.toFixed(2).replace('.', ',')}`;
+                document.getElementById('detalhes-descricao').innerText = produto.descricao;
+                modalDetalhes.classList.add('ativo');
+            }
+        }
+
+        function fecharDetalhes() {
+            modalDetalhes.classList.remove('ativo');
+        }
+        
+        formCheckout.addEventListener('submit', function(event) {
+            const metodoPagamento = document.querySelector('input[name="pagamento"]:checked').value;
+            let pedidoFormatado = "--- NOVO PEDIDO SMOKE HUB ---\n\n";
+            pedidoFormatado += "ITENS DO PEDIDO:\n";
+            carrinho.forEach(item => {
+                pedidoFormatado += `${item.quantidade}x ${item.nome} (R$ ${item.preco.toFixed(2)})\n`;
+            });
+            pedidoFormatado += `\nTOTAL: ${totalCarrinho.innerText}`;
+            pedidoFormatado += `\n\nMÉTODO DE PAGAMENTO: ${metodoPagamento}`;
+            campoPedidoCompleto.value = pedidoFormatado;
+        });
+
+        document.addEventListener('DOMContentLoaded', renderizarProdutos);
+    </script>
+</body>
+</html>
